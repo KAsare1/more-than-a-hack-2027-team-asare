@@ -95,6 +95,33 @@ with the ~55 minutes of ball-in-play typical of a top-flight match.
 | team_asare v1 | 0.835 | 0.480 | 18 |
 | baseline_smooth50 (the published floor) | 0.621 | 0.326 | 26 |
 
+## A full-match check: `solution/yardstick.py`
+
+17 public possessions cannot separate two reasonable submissions. As a second, full-match check
+we use the Smart Tagging phases that name the team in possession reliably on the public window
+(Build Up and Creating Chances 100%, Long Ball 90%). The model does not use them. There are 79 such
+tags, 76 of them outside the public window. For each tag we take the share of the submission's
+in-play frames labelled with the tagged team. *agree* is the mean share; *clean* is the share of
+tags where it reaches ≥ 90%, so flicker inside a phase fails it.
+
+**Validated against the published full-match baseline scores.** It ranks raw last and smooth25
+below smooth50, matching every baseline pair whose real gap exceeds the official 0.04 noise band.
+It swaps smooth50 and smooth125, whose real gap (0.019) is itself within that band.
+
+**Limits.** A phase tag cannot reveal a real change of possession that a submission missed, so
+*clean* rises as possessions get longer. Compare submissions at similar possession counts. Its own
+resolution is about ±0.05 on *clean* and ±0.02 on *agree* (76 tags).
+
+| full match, 76 tags outside the public window | agree | clean | possessions |
+|---|---|---|---|
+| team_asare v2 | 0.729 | 0.413 | 309 |
+| baseline_smooth125 | 0.674 | 0.355 | 430 |
+| baseline_smooth50 (the published floor) | 0.648 | 0.171 | — |
+
+Re-judged at matched possession counts, the contest-model variants and the carried-team evidence
+all land within this resolution of v2. That confirms the public window's verdict: equivalent within
+what can be measured.
+
 ## Limitations and next steps
 
 - Short possessions (under ~2 s) are mostly missed: the switching cost absorbs them.
