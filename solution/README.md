@@ -105,8 +105,10 @@ python evaluation/validate_submission.py evaluation/results/team_asare.csv
 Deterministic. Verified to give a byte-identical file, both from a warm cache and from the raw
 files. The first run parses the tracking into `data/cache/` (gitignored).
 
-## Use of AI assistance
+## Tools
 
-The code was written with the help of Claude (Anthropic). Per the competition terms, no
-competition data or extracts were shared with it: it worked only from the published documentation,
-the public 5-minute ground truth, and aggregate statistics (scores, rates and quantiles).
+We used an AI coding assistant (Claude, by Anthropic) as a development tool, for drafting code and
+documentation. As the competition terms require, no match data or extracts of it were given to
+it. It saw only the published documentation, the public 5-minute ground truth and aggregate
+results such as scores and rates. The pipeline itself uses no AI model: it is the deterministic
+numpy code in this folder.
