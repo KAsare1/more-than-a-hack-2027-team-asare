@@ -77,8 +77,18 @@ kickoff is at 113,742 (published in FAQ.md), so that stretch is `D`.
   ≥ 1–3 m away), both left the public scores within noise (spellF1 0.48–0.52, no consistent
   direction). They did remove 10–35 possessions over the full match, which the public window cannot
   tell us were real or spurious. Not adopted without evidence.
-- **Not used: the videos, the homography, the broadcast recording.** The tracking is already in
-  pitch coordinates, and the broadcast feed is not synced to the tactical one.
+- **The broadcast tracking, to fill gaps in the ball track.** The broadcast ATD is on its own
+  timeline, but aligning it turned out simple. Matching ball positions in 5-minute windows gives
+  one constant offset per half: tactical = broadcast + 4014 frames in the first half, + 26920 in
+  the second. That is unambiguous, with 50–80% of ball positions within 2 m at the best offset and
+  ≤ 9% at any other. During a replay the TV shows old footage but the match clock keeps running,
+  so live coverage resumes at the same offset. Frames showing live play were identified by player
+  agreement (median 0.3 m between the two feeds; 59% of graded frames). But the broadcast rarely
+  sees the ball when the tactical feed does not: it fills only ~5,900 of ~65,000 missing frames
+  (3.7% of graded). Where both see it, they disagree by more than 2 m 25% of the time. Filling
+  those frames left the public scores identical and the yardstick within noise, so it was not
+  adopted: no gain, and two more data files to depend on.
+- **Not used: the videos, the homography.** The tracking is already in pitch coordinates.
 
 ## Choosing parameters
 

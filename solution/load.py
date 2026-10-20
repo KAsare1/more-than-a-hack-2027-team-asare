@@ -21,8 +21,8 @@ CACHE_VERSION = 1
 HOME, AWAY = 0, 1
 
 
-def cache_path(game=GAME):
-    return os.path.join(DATA_DIR, "cache", "{}_tactical_atd_v{}.npz".format(game, CACHE_VERSION))
+def cache_path(game=GAME, source="tactical"):
+    return os.path.join(DATA_DIR, "cache", "{}_{}_atd_v{}.npz".format(game, source, CACHE_VERSION))
 
 
 def team_of_each_track(meta_path):
@@ -64,17 +64,20 @@ def _parse_raw(raw_path, n_frames, n_slots):
     return players, ball
 
 
-def load_tracking(game=GAME, rebuild=False):
-    """dict: players (N,S,3), ball (N,2), team (S,), all coordinates in metres."""
-    path = cache_path(game)
+def load_tracking(game=GAME, rebuild=False, source="tactical"):
+    """dict: players (N,S,3), ball (N,2), team (S,), all coordinates in metres.
+
+    source="broadcast" reads the TV recording's ATD, on its own timeline (see solution/README.md).
+    """
+    path = cache_path(game, source)
     if os.path.isfile(path) and not rebuild:
         with np.load(path) as z:
             return {k: z[k] for k in z.files}
 
-    meta_path, raw_path = require(["atd_meta", "atd_raw"], game)
+    meta_path, raw_path = require(["atd_meta", "atd_raw"], game, source=source)
     team = team_of_each_track(meta_path)
-    n_frames = source_frames("tactical", game)
-    print("parsing tracking (first run only, ~1-2 min) ...")
+    n_frames = source_frames(source, game)
+    print("parsing {} tracking (first run only) ...".format(source))
     players, ball = _parse_raw(raw_path, n_frames, len(team))
 
     length, width = GAMES[game]["pitch"]
