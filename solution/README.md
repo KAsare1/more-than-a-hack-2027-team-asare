@@ -71,6 +71,12 @@ kickoff is at 113,742 (published in FAQ.md), so that stretch is `D`.
   *decisive* contact (the first after which the old team does not touch the ball again nearby) was
   neutral. Restart and stoppage anchors (ball starting to move, ball leaving play) were too
   inconsistent across the public window's four examples of each to try. Dropped.
+- **A contest model.** With an opponent within 3 m of the ball, the nearest player's team is right
+  far less often (94% → 78% with the ball at feet, 84% → 61% at 1–3 m). Scaling contested evidence
+  down (factor 0.2–0.6), and separately requiring control episodes to be uncontested (opponent
+  ≥ 1–3 m away), both left the public scores within noise (spellF1 0.48–0.52, no consistent
+  direction). They did remove 10–35 possessions over the full match, which the public window cannot
+  tell us were real or spurious. Not adopted without evidence.
 - **Not used: the videos, the homography, the broadcast recording.** The tracking is already in
   pitch coordinates, and the broadcast feed is not synced to the tactical one.
 
