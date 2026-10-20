@@ -34,6 +34,8 @@ DEFAULTS = {
     "before_set_piece_s": 5.0,
     "before_set_piece": 1.0,
     "in_set_piece": 0.3,
+    "carry_weight": 1.0,      # last control episode's team, carried through passes and gaps
+    "carry_decay_s": 6.0,
     "set_piece_team": 0.5,    # pull towards the tagged restarting team inside a set-piece tag
     "phase_team": 0.0,        # off: phases span several possessions and merged short ones
     # decoder costs
@@ -62,8 +64,18 @@ def evidence(f, tags, params):
     conf = np.where(f["ball_speed"] > p["flight_speed"], conf * p["flight_factor"], conf)
     lean = np.tanh((d_away - d_home) / p["margin_scale_m"]) * conf * p["team_weight"]
     lean = np.where(usable, lean, 0.0)
+
+    has = f["carried"] >= 0
+    carry = p["carry_weight"] * np.exp(-f["carried_age"] / (p["carry_decay_s"] * 25.0)) * has
+    lean = lean + np.where(f["carried"] == 0, 1.0, -1.0) * carry
+
+    # Team evidence says which team, not whether the ball is alive. Adding it as +/- lean/2 would
+    # raise the better alive state and quietly vote against D, so D gets the log-mean of the two
+    # alive scores, log cosh(lean/2), which leaves alive-vs-dead exactly where the dead evidence
+    # put it.
     e[:, H] += lean / 2
     e[:, A] -= lean / 2
+    e[:, D] += np.logaddexp(lean / 2, -lean / 2) - np.log(2.0)
 
     speed = np.nan_to_num(f["team_speed"], nan=p["slow_speed"])
     dead = p["dead_bias"] + p["slow_gain"] * (p["slow_speed"] - speed)

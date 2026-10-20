@@ -80,9 +80,48 @@ def _compute(trk, pitch):
     last_edge = np.where(last >= 0, edge[np.clip(last, 0, n - 1)], np.nan)
     next_edge = np.where(nxt < n, edge[np.clip(nxt, 0, n - 1)], np.nan)
 
+    carried, carried_age = _last_control(vis & ~out, d_home, d_away)
+
     return {
+        "carried": carried, "carried_age": carried_age,
         "vis": vis, "out": out, "d_home": d_home, "d_away": d_away,
         "ball_speed": ball_speed, "team_speed": team_speed, "gap_len": gap_len,
         "last_edge": last_edge, "next_edge": next_edge,
         "n_players": np.isfinite(players[:, :, 0]).sum(axis=1),
     }
+
+
+CONTROL_RADIUS_M = 1.2
+CONTROL_MIN_FRAMES = 8
+
+
+def _last_control(usable, d_home, d_away):
+    """Team of the most recent control episode, and frames since it ended.
+
+    A control episode is a run of at least CONTROL_MIN_FRAMES where the ball sits within
+    CONTROL_RADIUS_M of a player and that player's team is the closer one. The ball track is
+    smooth enough that kicks do not show up as velocity spikes, but a ball staying at a player's
+    feet does show up -- so control is read from dwell time, not from impacts.
+
+    Carrying the last episode's team forward covers passes in flight and gaps in the ball track,
+    where the nearest player is often an opponent or there is no ball at all. carried is -1 before
+    the first episode; during an episode it is that episode's team with age 0.
+    """
+    n = len(usable)
+    end_team = np.full(n, -1, dtype=np.int8)
+    in_episode = np.full(n, -1, dtype=np.int8)
+    with np.errstate(invalid="ignore"):
+        for team, own, other in ((0, d_home, d_away), (1, d_away, d_home)):
+            mask = usable & (own < CONTROL_RADIUS_M) & (own < other)
+            edges = np.flatnonzero(np.diff(np.r_[0, mask.astype(np.int8), 0]))
+            for start, end in zip(edges[0::2], edges[1::2]):
+                if end - start >= CONTROL_MIN_FRAMES:
+                    in_episode[start:end] = team
+                    end_team[end - 1] = team
+    frame = np.arange(n)
+    marked = (end_team >= 0) | (in_episode >= 0)
+    last = np.maximum.accumulate(np.where(marked, frame, -1))
+    source = np.where(in_episode >= 0, in_episode, end_team)
+    carried = np.where(last >= 0, source[np.clip(last, 0, n - 1)], -1)
+    age = np.where(last >= 0, frame - last, n)
+    return carried, age

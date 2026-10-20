@@ -29,7 +29,17 @@ decoder places each change where the evidence turns.
   1 m, 63% beyond 4 m. The `tanh` term makes a ball both teams are equally close to count for
   little;
 - scaled by 0.3 when the ball moves faster than 12 m/s (in flight, 60% reliable);
+- **last team in control, carried forward.** A *control episode* is when the ball stays within
+  1.2 m of a player, closer to that player's team than to the other, for at least 8 frames. There
+  are about 8 a minute, and they name the right team 90% of the time. The team of the most recent
+  episode is carried through passes in flight and gaps in the ball track: 83–87% correct on
+  in-play frames outside episodes, many of which otherwise have no evidence or misleading
+  evidence. It decays with a 6 s time constant;
 - inside a Smart Tagging set piece with a team tag, a small pull towards the restarting team.
+
+Team evidence only decides H vs A. It is added as ±lean/2, and D receives log cosh(lean/2). That
+makes it neutral on alive vs dead, which is left entirely to the dead-ball evidence. Without this
+correction, stronger team evidence quietly voted against dead balls.
 
 **Dead ball (D vs alive)**, as a log-odds:
 
@@ -51,6 +61,9 @@ kickoff is at 113,742 (published in FAQ.md), so that stretch is `D`.
   from 0.48 to 0.43.
 - **The box / final-third tags.** They agree with the possessing team only about 50% of the time.
 - **A stationary visible ball as dead-ball evidence.** It was 14% precise.
+- **Touches from changes in ball velocity.** The ball track is smooth. Its sharp velocity changes
+  sit a median 4.6 m from the nearest player, so they are tracking artefacts, not kicks. Control
+  episodes, which read control from dwell time, replaced them.
 - **Not used: the videos, the homography, the broadcast recording.** The tracking is already in
   pitch coordinates, and the broadcast feed is not synced to the tactical one.
 
@@ -60,19 +73,20 @@ The public window holds 17 possessions, and its bootstrap noise band on spellF1 
 So parameters were **not** chosen by maximising the public score. The evidence weights come from
 measured rates (above). The switching costs were set in the middle of the range where the public
 score is flat (switch cost 8–25 all score 0.46–0.49). Full-match outputs were checked for
-plausibility: 312 possessions, mean 10.9 s; 131 stoppages; 46% of graded time dead, consistent
+plausibility: 309 possessions, mean 10.9 s; 126 stoppages; 47% of graded time dead, consistent
 with the ~55 minutes of ball-in-play typical of a top-flight match.
 
 | on the public 5 minutes | macroF1 | spellF1 | possessions (truth: 17) |
 |---|---|---|---|
-| team_asare | 0.835 | 0.480 | 18 |
+| team_asare v2 (control episodes) | 0.837 | 0.491 | 18 |
+| team_asare v1 | 0.835 | 0.480 | 18 |
 | baseline_smooth50 (the published floor) | 0.621 | 0.326 | 26 |
 
 ## Limitations and next steps
 
 - Short possessions (under ~2 s) are mostly missed: the switching cost absorbs them.
-- Team evidence uses only the nearest player. Ideas: detect touches from changes in ball
-  velocity, use the player's velocity relative to the ball, and track pressure from opponents.
+- Team evidence comes from the nearest player and control episodes. Ideas: use the player's
+  velocity relative to the ball, and track pressure from opponents.
 - The ball is missing on 41% of frames. Interpolating short gaps and reasoning about which team
   surrounds the area where the ball was lost would help.
 - Restart team: who takes a throw-in is unknown (tagged N/A). Which side of the pitch the ball left
