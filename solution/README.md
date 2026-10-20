@@ -64,6 +64,13 @@ kickoff is at 113,742 (published in FAQ.md), so that stretch is `D`.
 - **Touches from changes in ball velocity.** The ball track is smooth. Its sharp velocity changes
   sit a median 4.6 m from the nearest player, so they are tracking artefacts, not kicks. Control
   episodes, which read control from dwell time, replaced them.
+- **Snapping boundaries to events after decoding.** On the public window, many errors are the right
+  change placed 1–2 s off, in both directions. Moving each H↔A change to the nearest start of a
+  close contact (within 2 m) by the incoming team made spellF1 *worse* (0.491 → 0.457–0.480). From
+  the decoded boundary, the nearest contact is often the wrong one. Snapping to the new team's
+  *decisive* contact (the first after which the old team does not touch the ball again nearby) was
+  neutral. Restart and stoppage anchors (ball starting to move, ball leaving play) were too
+  inconsistent across the public window's four examples of each to try. Dropped.
 - **Not used: the videos, the homography, the broadcast recording.** The tracking is already in
   pitch coordinates, and the broadcast feed is not synced to the tactical one.
 
